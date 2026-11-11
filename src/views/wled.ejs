@@ -1,0 +1,59 @@
+<% locals.page = 'wled' %>
+<%- include('layouts/base', { body: `
+<div class="max-w-3xl mx-auto">
+  <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+    <div>
+      <h1 class="text-2xl font-bold">${i18n.wled.title}</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${i18n.wled.subtitle}</p>
+    </div>
+    <button id="btn-add" class="btn-primary">+ ${i18n.wled.addDevice}</button>
+  </div>
+
+  <div id="wled-devices" class="space-y-4"></div>
+</div>
+
+<!-- Modale aggiungi -->
+<div id="add-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+  <div class="card w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <h3 class="font-bold text-lg mb-4">${i18n.wled.addDevice}</h3>
+    <div class="mb-4 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-medium text-blue-700 dark:text-blue-300">Discovery automatico</span>
+        <button id="discover-btn" class="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white">Cerca in rete</button>
+      </div>
+      <div id="discover-status" class="text-xs text-gray-500 dark:text-gray-400">Scansiona la rete per WLED non ancora configurati.</div>
+      <div id="discover-results" class="mt-2 space-y-1"></div>
+    </div>
+    <div class="text-xs text-gray-400 mb-2">Oppure inserisci manualmente:</div>
+    <label class="label">${i18n.wled.name}</label>
+    <input id="add-name" class="input mb-3" placeholder="Es. Acquario Soggiorno" maxlength="64">
+    <label class="label">${i18n.wled.ip}</label>
+    <input id="add-ip" class="input mb-4" placeholder="192.168.1.50" inputmode="decimal">
+    <div class="flex gap-2 justify-end">
+      <button id="add-close" class="btn-secondary">Annulla</button>
+      <button id="add-test" class="btn-secondary">${i18n.wled.test}</button>
+      <button id="add-save" class="btn-primary">Salva</button>
+    </div>
+    <p id="add-status" class="text-xs mt-3 hidden"></p>
+  </div>
+</div>
+
+<!-- Modale Schedule -->
+<div id="schedule-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+  <div class="card w-full max-w-xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-lg">Schedule giornaliero</h3>
+      <button id="sched-close" class="text-gray-400 hover:text-gray-600 text-xl">×</button>
+    </div>
+    <p class="text-xs text-gray-400 mb-3">Lo slot attivo viene applicato in automatico in base all'ora corrente (tick 60s).</p>
+    <div id="schedule-slots"></div>
+    <button id="sched-add" class="btn-secondary w-full mb-3 text-sm">+ Aggiungi fascia</button>
+    <div class="flex gap-2 justify-end">
+      <button id="sched-cancel" class="btn-secondary">Annulla</button>
+      <button id="sched-save" class="btn-primary">Salva schedule</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/wled.js"></script>
+` }) %>

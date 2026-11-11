@@ -1,0 +1,118 @@
+<% locals.page = 'color' %>
+<%- include('layouts/base', { body: `
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold mb-2">${i18n.color.title}</h1>
+  <p class="text-gray-500 dark:text-gray-400 text-sm mb-8">${i18n.color.subtitle}</p>
+
+  <div class="card">
+    <!-- Preview colore -->
+    <div id="color-preview" class="w-full h-20 rounded-xl mb-8 transition-all duration-300" style="background: rgb(0,0,80)"></div>
+
+    <!-- Slider Amber -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center mb-2">
+        <label class="label mb-0 flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>
+          ${i18n.color.amber}
+        </label>
+        <span class="text-sm font-bold text-amber-500" id="val-amber">0</span>
+      </div>
+      <input type="range" min="0" max="100" value="0" class="w-full h-2 slider-amber" id="slider-amber" oninput="updatePreview()">
+    </div>
+
+    <!-- Slider Blue -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center mb-2">
+        <label class="label mb-0 flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span>
+          ${i18n.color.blue}
+        </label>
+        <span class="text-sm font-bold text-blue-500" id="val-blue">0</span>
+      </div>
+      <input type="range" min="0" max="100" value="0" class="w-full h-2 slider-blue" id="slider-blue" oninput="updatePreview()">
+    </div>
+
+    <!-- Slider White -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center mb-2">
+        <label class="label mb-0 flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-gray-300 inline-block"></span>
+          ${i18n.color.white}
+        </label>
+        <span class="text-sm font-bold text-gray-400" id="val-white">0</span>
+      </div>
+      <input type="range" min="0" max="100" value="0" class="w-full h-2 slider-white" id="slider-white" oninput="updatePreview()">
+    </div>
+
+    <!-- Slider Power -->
+    <div class="mb-8">
+      <div class="flex justify-between items-center mb-2">
+        <label class="label mb-0 flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+          ${i18n.color.power}
+        </label>
+        <span class="text-sm font-bold text-emerald-500" id="val-power">100</span>
+      </div>
+      <input type="range" min="0" max="100" value="100" class="w-full h-2 slider-power" id="slider-power" oninput="updatePreview()">
+    </div>
+
+    <button onclick="applyColor()" class="btn-primary w-full" id="btn-apply">
+      ${i18n.color.apply}
+    </button>
+  </div>
+</div>
+
+<script>
+function updatePreview() {
+  const a = +document.getElementById('slider-amber').value;
+  const b = +document.getElementById('slider-blue').value;
+  const w = +document.getElementById('slider-white').value;
+  const p = +document.getElementById('slider-power').value;
+
+  document.getElementById('val-amber').textContent = a;
+  document.getElementById('val-blue').textContent = b;
+  document.getElementById('val-white').textContent = w;
+  document.getElementById('val-power').textContent = p;
+
+  const factor = p / 100;
+  const r = Math.round((a / 100) * 200 * factor);
+  const g = Math.round((w / 100) * 150 * factor + (a / 100) * 50 * factor);
+  const bl = Math.round((b / 100) * 255 * factor + (w / 100) * 100 * factor);
+  document.getElementById('color-preview').style.background = \`rgb(\${r},\${g},\${bl})\`;
+}
+
+async function applyColor() {
+  const btn = document.getElementById('btn-apply');
+  btn.disabled = true;
+  btn.textContent = '${i18n.common.loading}';
+  try {
+    await fetch('/api/color', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        Amber: +document.getElementById('slider-amber').value,
+        Blue:  +document.getElementById('slider-blue').value,
+        White: +document.getElementById('slider-white').value,
+        Power: +document.getElementById('slider-power').value
+      })
+    });
+    showToast('${i18n.color.success}', 'success');
+  } catch(e) {
+    showToast('${i18n.color.error}', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '${i18n.color.apply}';
+  }
+}
+
+// Carica colore attuale
+fetch('/api/color').then(r => r.json()).then(c => {
+  if (!c) return;
+  document.getElementById('slider-amber').value = c.Amber || 0;
+  document.getElementById('slider-blue').value  = c.Blue  || 0;
+  document.getElementById('slider-white').value = c.White || 0;
+  document.getElementById('slider-power').value = c.Power !== undefined ? c.Power : 100;
+  updatePreview();
+}).catch(() => {});
+</script>
+` }) %>

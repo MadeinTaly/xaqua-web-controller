@@ -1,0 +1,44 @@
+{
+  "device": {
+    "ip": "192.168.1.1",
+    "username": "Admin",
+    "password": "Admin"
+  },
+  "weather": {
+    "city": "",
+    "apiKey": "",
+    "autoUpdate": false,
+    "cronTime": "0 3 * * *"
+  },
+  "aquarium": {
+    "type": "SemiDeep"
+  },
+  "nature": {
+    "enabled": false,
+    "useWeather": true,
+    "useMoon": false,
+    "interval": 2,
+    "cronTime": "0 */2 * * *"
+  },
+  "lastSchedule": [],
+  "lastNatureSlots": [],
+  "manualSchedule": [],
+  "customPresets": [],
+  "customDayPresets": [],
+  "reelState": {
+    "selection": [],
+    "depth": "SemiDeep"
+  },
+  "wled": {
+    "devices": [],
+    "schedules": {}
+  },
+  "experimental": {
+    "acclimation": {
+      "active": false,
+      "weeks": 4,
+      "startPct": 30,
+      "startDate": "2026-06-29"
+    }
+  }
+}

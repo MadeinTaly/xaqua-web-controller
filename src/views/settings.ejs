@@ -1,0 +1,271 @@
+<% locals.page = 'settings' %>
+<%- include('layouts/base', { body: `
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold mb-8">${i18n.settings.title}</h1>
+
+  <!-- Dispositivo -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      ${i18n.settings.device}
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="label">${i18n.settings.deviceIp}</label>
+        <input type="text" id="device-ip" class="input" placeholder="192.168.1.1">
+      </div>
+      <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+        Username e password vengono lette dalle variabili d'ambiente (DEVICE_USERNAME / DEVICE_PASSWORD).
+      </div>
+      <div class="flex gap-3">
+        <button onclick="testConnection()" class="btn-secondary flex-1" id="btn-test">
+          ${i18n.settings.testConnection}
+        </button>
+        <div id="test-result" class="flex items-center text-sm font-medium px-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meteo -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+      ${i18n.settings.weather}
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="label">${i18n.settings.apiKey}</label>
+        <input type="text" id="weather-apikey" class="input" placeholder="API Key OpenWeatherMap">
+      </div>
+    </div>
+  </div>
+
+  <!-- Power Scale -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Potenza globale
+    </h2>
+    <div>
+      <label class="label">Scala potenza (%)</label>
+      <div class="flex items-center gap-4">
+        <input type="range" id="power-scale" min="0" max="100" value="100" class="flex-1" style="accent-color:#f59e0b" oninput="document.getElementById('power-scale-val').textContent=this.value+'%'">
+        <span id="power-scale-val" class="text-lg font-bold text-amber-500 w-14 text-right">100%</span>
+      </div>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Riduce tutti i valori di luminosità (Amber, Blue, White, Power) della percentuale indicata. Applicato a ogni comando inviato alla lampada.</p>
+    </div>
+  </div>
+
+  <!-- Orario lampada -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Orario lampada
+    </h2>
+    <div class="mb-4 flex items-center gap-3">
+      <span class="text-sm text-gray-500">Orario firmware:</span>
+      <span class="font-mono text-purple-500 font-semibold" id="firmware-time">--</span>
+    </div>
+    <div class="flex gap-3 mb-3">
+      <input type="time" id="manual-time" class="input flex-1" step="1">
+      <button onclick="setManualTime()" class="btn-secondary whitespace-nowrap" id="btn-set-time">Imposta</button>
+    </div>
+    <div class="flex gap-3">
+      <select id="tz-select" class="input flex-1" aria-label="Fuso orario"></select>
+      <button onclick="syncTimeAuto()" class="btn-secondary whitespace-nowrap" id="btn-sync-time">Ora dal web</button>
+    </div>
+    <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">Prende data e ora da internet e le converte nel fuso scelto, ora legale compresa. Il fuso viene salvato e il riallineamento automatico lo segue.</p>
+  </div>
+
+  <!-- Salva -->
+  <button onclick="saveSettings()" class="btn-primary w-full mb-6" id="btn-save">
+    ${i18n.settings.save}
+  </button>
+
+  <!-- Meteo -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-2 flex items-center gap-2">
+      <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+      Meteo
+    </h2>
+    <p class="text-xs text-gray-500 mb-3">Verifica che API key e città (config server) rispondano e quale luogo viene risolto.</p>
+    <button onclick="testWeather()" class="btn-secondary w-full" id="btn-weather-test">Testa meteo</button>
+    <div id="weather-test-result" class="hidden mt-3 text-sm rounded-xl p-3"></div>
+  </div>
+
+  <!-- Diagnostica -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-2 flex items-center gap-2">
+      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      Diagnostica
+    </h2>
+    <p class="text-xs text-gray-500 mb-3">Log di sistema, oscilloscopio, verifiche in chiaro: errori di sincronizzazione meteo/luna, apply schedule, connessione device.</p>
+    <div class="flex gap-2">
+      <a href="/logs" class="btn-secondary flex-1 inline-block text-center">Log di sistema &rarr;</a>
+      <a href="/oscilloscope" class="btn-secondary flex-1 inline-block text-center">Oscilloscopio &rarr;</a>
+    </div>
+  </div>
+
+  <!-- Experimental -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-2 flex items-center gap-2">
+      <span class="text-base">⚗️</span> Experimental
+    </h2>
+    <p class="text-xs text-gray-500 mb-3">Funzioni sperimentali: acclimatazione coralli (ramp intensità su settimane) e futuri cicli.</p>
+    <a href="/experimental" class="btn-secondary w-full inline-block text-center">Apri Experimental &rarr;</a>
+  </div>
+</div>
+
+<script>
+async function loadSettings() {
+  try {
+    var data = await fetch('/api/settings').then(function(r){return r.json();});
+    if (data.device) {
+      document.getElementById('device-ip').value = data.device.ip || '';
+    }
+    fillTimezones((data.device && data.device.timezone) || 'Europe/Rome');
+    if (data.weather) {
+      document.getElementById('weather-apikey').value = data.weather.apiKey || '';
+    }
+    var ps = data.powerScale !== undefined ? data.powerScale : 100;
+    document.getElementById('power-scale').value = ps;
+    document.getElementById('power-scale-val').textContent = ps + '%';
+  } catch(e) {}
+}
+
+async function saveSettings() {
+  var btn = document.getElementById('btn-save');
+  btn.disabled = true;
+  btn.textContent = '${i18n.common.loading}';
+  try {
+    var r = await fetch('/api/settings', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        device: {
+          ip: document.getElementById('device-ip').value
+        },
+        weather: {
+          apiKey: document.getElementById('weather-apikey').value
+        },
+        powerScale: parseInt(document.getElementById('power-scale').value)
+      })
+    });
+    var d = await r.json();
+    if (d.ok) showToast('${i18n.settings.saved}', 'success');
+    else showToast(d.error || 'Errore salvataggio', 'error');
+  } catch(e) { showToast('Errore salvataggio', 'error'); }
+  finally {
+    btn.disabled = false;
+    btn.textContent = '${i18n.settings.save}';
+  }
+}
+
+async function testConnection() {
+  var btn = document.getElementById('btn-test');
+  var result = document.getElementById('test-result');
+  btn.disabled = true;
+  result.textContent = '...';
+  result.className = 'flex items-center text-sm font-medium px-3 text-gray-400';
+  try {
+    var data = await fetch('/api/settings/test-connection', { method: 'POST' }).then(function(r){return r.json();});
+    if (data.connected) {
+      result.textContent = '✓ ${i18n.settings.connected}';
+      result.className = 'flex items-center text-sm font-medium px-3 text-emerald-500';
+    } else {
+      result.textContent = '✗ ${i18n.settings.notConnected}';
+      result.className = 'flex items-center text-sm font-medium px-3 text-red-500';
+    }
+  } catch(e) {
+    result.textContent = '✗ Errore';
+    result.className = 'flex items-center text-sm font-medium px-3 text-red-500';
+  } finally { btn.disabled = false; }
+}
+
+async function loadFirmwareTime() {
+  try {
+    var data = await fetch('/api/lampinfo').then(function(r){return r.json();});
+    if (data.time) {
+      var t = data.time.split(' - ')[1] || data.time;
+      document.getElementById('firmware-time').textContent = t;
+      // Pre-popola l'input con l'ora attuale del firmware
+      var hhmm = t.substring(0, 5);
+      document.getElementById('manual-time').value = hhmm;
+    }
+  } catch(e) {}
+}
+
+async function setManualTime() {
+  var btn = document.getElementById('btn-set-time');
+  var val = document.getElementById('manual-time').value;
+  if (!val) return;
+  btn.disabled = true;
+  try {
+    var r = await fetch('/api/lampinfo/sync-time', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ time: val + ':00' })
+    });
+    var d = await r.json();
+    if (d.ok) {
+      showToast('Orario impostato: ' + val, 'success');
+      setTimeout(loadFirmwareTime, 1000);
+    } else showToast('Errore impostazione orario', 'error');
+  } catch(e) { showToast('Errore', 'error'); }
+  finally { btn.disabled = false; }
+}
+
+function fillTimezones(current) {
+  var sel = document.getElementById('tz-select');
+  var zones = (Intl.supportedValuesOf && Intl.supportedValuesOf('timeZone')) || ['Europe/Rome'];
+  if (zones.indexOf(current) < 0) zones.unshift(current);
+  sel.innerHTML = zones.map(function (z) { return '<option>' + z + '</option>'; }).join('');
+  sel.value = current;
+}
+
+async function syncTimeAuto() {
+  var btn = document.getElementById('btn-sync-time');
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    var r = await fetch('/api/lampinfo/sync-time', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ timezone: document.getElementById('tz-select').value })
+    });
+    var d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    var h = d.offsetMinutes / 60;
+    showToast('Orario impostato: ' + d.timezone + ' (UTC' + (h >= 0 ? '+' : '') + h + ')' + (d.source === 'web' ? '' : ' — web non raggiungibile, usato orologio server'), 'success');
+    setTimeout(loadFirmwareTime, 1000);
+  } catch(e) { showToast('Errore sincronizzazione: ' + e.message, 'error'); }
+  finally {
+    btn.disabled = false;
+    btn.textContent = 'Ora dal web';
+  }
+}
+
+async function testWeather() {
+  var btn = document.getElementById('btn-weather-test');
+  var box = document.getElementById('weather-test-result');
+  var old = btn.textContent; btn.disabled = true; btn.textContent = 'Verifico...';
+  try {
+    var d = await fetch('/api/weather/test').then(function(r){ return r.json(); });
+    box.classList.remove('hidden');
+    if (d.ok) {
+      box.className = 'mt-3 text-sm rounded-xl p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300';
+      box.innerHTML = '✓ <b>' + d.resolved + '</b> · ' + (d.desc || d.condition) +
+        (d.tempC != null ? (' · ' + d.tempC + '°C') : '') +
+        '<div class="text-xs opacity-70 mt-1">condizione: ' + d.condition + ' · query: ' + d.query + '</div>';
+    } else {
+      box.className = 'mt-3 text-sm rounded-xl p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300';
+      box.textContent = '✕ ' + (d.error || 'errore');
+    }
+  } catch (e) {
+    box.classList.remove('hidden');
+    box.className = 'mt-3 text-sm rounded-xl p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300';
+    box.textContent = '✕ ' + e.message;
+  } finally { btn.disabled = false; btn.textContent = old; }
+}
+
+loadSettings();
+loadFirmwareTime();
+</script>
+` }) %>

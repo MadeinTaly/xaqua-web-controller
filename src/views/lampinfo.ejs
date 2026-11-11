@@ -1,0 +1,418 @@
+<% locals.page = 'lampinfo' %>
+<%- include('layouts/base', { body: `
+<div class="max-w-4xl mx-auto">
+  <h1 class="text-2xl font-bold mb-8">${i18n.lampinfo.title}</h1>
+
+  <div class="card mb-6">
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <label class="label">${i18n.lampinfo.name}</label>
+        <input type="text" id="lamp-name" class="input" placeholder="--">
+      </div>
+      <div>
+        <label class="label">${i18n.lampinfo.id}</label>
+        <input type="text" id="lamp-id" class="input" readonly>
+      </div>
+      <div>
+        <label class="label">${i18n.lampinfo.firmware}</label>
+        <input type="text" id="lamp-fw" class="input" readonly>
+      </div>
+      <div>
+        <label class="label">${i18n.lampinfo.aquariumType}</label>
+        <select id="lamp-aqtype" class="input">
+          <option value="0">${i18n.lampinfo.shallow}</option>
+          <option value="1">${i18n.lampinfo.medium}</option>
+          <option value="2">${i18n.lampinfo.deep}</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">${i18n.lampinfo.aquariumId}</label>
+        <input type="text" id="lamp-aqname" class="input" placeholder="Nome acquario">
+      </div>
+      <div>
+        <label class="label">${i18n.lampinfo.groupName}</label>
+        <input type="text" id="lamp-group" class="input" placeholder="--">
+      </div>
+    </div>
+    <button onclick="saveLampInfo()" class="btn-primary mt-6">${i18n.lampinfo.save}</button>
+  </div>
+
+  <!-- Status -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-4">Stato</h2>
+    <div class="grid grid-cols-3 gap-4">
+      <div class="text-center p-4 rounded-xl bg-orange-50 dark:bg-orange-900/20">
+        <div class="text-2xl font-bold text-orange-500" id="stat-temp">--</div>
+        <div class="text-xs text-gray-500 mt-1">${i18n.lampinfo.temperature} (°C)</div>
+      </div>
+      <div class="text-center p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20">
+        <div class="text-2xl font-bold text-blue-500" id="stat-fan">--</div>
+        <div class="text-xs text-gray-500 mt-1">${i18n.lampinfo.fanSpeed} (RPM)</div>
+      </div>
+      <div class="text-center p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20">
+        <div class="text-lg font-bold text-purple-500" id="stat-time">--</div>
+        <div class="text-xs text-gray-500 mt-1">${i18n.lampinfo.lampTime}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Temperature History Chart -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-4">Storico temperatura</h2>
+    <div class="relative" style="height: 300px; position: relative;">
+      <canvas id="tempChart" style="width: 100%; height: 100%;"></canvas>
+      <div id="chart-no-data" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm" style="display: none;">
+        Nessun dato disponibile
+      </div>
+    </div>
+    <div class="grid grid-cols-3 gap-4 mt-6">
+      <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div class="text-xs text-gray-500 mb-1">Min</div>
+        <div class="text-lg font-semibold text-orange-600" id="stat-temp-min">--</div>
+      </div>
+      <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div class="text-xs text-gray-500 mb-1">Media</div>
+        <div class="text-lg font-semibold text-orange-600" id="stat-temp-avg">--</div>
+      </div>
+      <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div class="text-xs text-gray-500 mb-1">Max</div>
+        <div class="text-lg font-semibold text-red-600" id="stat-temp-max">--</div>
+      </div>
+    </div>
+    <div class="mt-4 text-xs text-gray-500" id="chart-span">Periodo: --</div>
+  </div>
+
+  <!-- Light History Chart -->
+  <div class="card mb-6">
+    <h2 class="font-semibold mb-1">Storico luci</h2>
+    <p class="text-xs text-gray-500 mb-4">Linea piena = valore letto dalla lampada, tratteggiata = atteso dalla schedule applicata.</p>
+    <div class="relative" style="height: 300px; position: relative;">
+      <canvas id="lightChart" style="width: 100%; height: 100%;"></canvas>
+      <div id="light-no-data" class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm" style="display: none;">
+        Nessun dato disponibile
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-4 mt-4 text-xs">
+      <span class="flex items-center gap-2"><span style="display:inline-block;width:14px;height:3px;background:#ff9500"></span>Amber</span>
+      <span class="flex items-center gap-2"><span style="display:inline-block;width:14px;height:3px;background:#3b82f6"></span>Blue</span>
+      <span class="flex items-center gap-2"><span style="display:inline-block;width:14px;height:3px;background:#9ca3af"></span>White</span>
+      <span class="flex items-center gap-2"><span style="display:inline-block;width:14px;height:3px;background:#10b981"></span>Power</span>
+    </div>
+    <div class="mt-4 text-xs" id="light-drift">Scostamento: --</div>
+  </div>
+</div>
+
+<script>
+let lampData = null;
+let tempChartData = null;
+let historyPollTimer = null;
+
+async function loadLampInfo() {
+  try {
+    const data = await fetch('/api/lampinfo').then(r => r.json());
+    if (data.info) {
+      lampData = data.info;
+      document.getElementById('lamp-name').value = data.info.Name || '';
+      document.getElementById('lamp-id').value = data.info.ID || '';
+      document.getElementById('lamp-fw').value = data.info.FW_rev || '';
+      document.getElementById('lamp-group').value = data.info.GroupName || '';
+      document.getElementById('lamp-aqname').value = data.info.AquariumName || '';
+      const aqType = data.info.AquariumType;
+      if (aqType !== undefined) document.getElementById('lamp-aqtype').value = aqType;
+    }
+    if (data.status) {
+      document.getElementById('stat-temp').textContent = data.status.Temperature ? data.status.Temperature.toFixed(1) : '--';
+      document.getElementById('stat-fan').textContent = data.status.FanSpeed || '--';
+    }
+    if (data.time) {
+      document.getElementById('stat-time').textContent = data.time.split(' - ')[1] || data.time;
+    }
+  } catch(e) {
+    showToast('Errore caricamento info', 'error');
+  }
+}
+
+async function loadTempHistory() {
+  try {
+    const resp = await fetch('/api/lampstatus/history');
+    const data = await resp.json();
+    tempChartData = data;
+    redrawTempChart();
+    redrawLightChart();
+  } catch(e) {
+    console.warn('Failed to load temp history', e);
+  }
+}
+
+function redrawTempChart() {
+  if (!tempChartData || !tempChartData.samples || tempChartData.samples.length === 0) {
+    document.getElementById('chart-no-data').style.display = 'flex';
+    document.getElementById('stat-temp-min').textContent = '--';
+    document.getElementById('stat-temp-avg').textContent = '--';
+    document.getElementById('stat-temp-max').textContent = '--';
+    document.getElementById('chart-span').textContent = 'Periodo: --';
+    return;
+  }
+
+  document.getElementById('chart-no-data').style.display = 'none';
+
+  const samples = tempChartData.samples;
+  const stats = tempChartData.stats || {};
+  const threshold = tempChartData.alertThreshold || 55;
+
+  // Aggiorna statistiche
+  if (stats.temperature) {
+    document.getElementById('stat-temp-min').textContent = stats.temperature.min.toFixed(2) + '°';
+    document.getElementById('stat-temp-avg').textContent = stats.temperature.avg.toFixed(2) + '°';
+    document.getElementById('stat-temp-max').textContent = stats.temperature.max.toFixed(2) + '°';
+  }
+
+  if (stats.spanMinutes !== undefined) {
+    const hours = Math.floor(stats.spanMinutes / 60);
+    const mins = stats.spanMinutes % 60;
+    const span = hours > 0 ? hours + 'h ' + mins + 'min' : mins + 'min';
+    document.getElementById('chart-span').textContent = 'Periodo: ' + span + ' (' + samples.length + ' campioni)';
+  }
+
+  // Canvas drawing
+  const canvas = document.getElementById('tempChart');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+
+  const w = canvas.width;
+  const h = canvas.height;
+  const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+  const plotW = w - padding.left - padding.right;
+  const plotH = h - padding.top - padding.bottom;
+
+  // Assi
+  ctx.strokeStyle = '#ccc';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padding.left, padding.top);
+  ctx.lineTo(padding.left, h - padding.bottom);
+  ctx.lineTo(w - padding.right, h - padding.bottom);
+  ctx.stroke();
+
+  // Scale
+  const temps = samples.map(s => s.tempC);
+  const minT = Math.floor(Math.min(...temps) - 2);
+  const maxT = Math.ceil(Math.max(...temps) + 2);
+  const tempRange = maxT - minT || 10;
+
+  // Y-axis labels e gridlines
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#999';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+
+  for (let t = minT; t <= maxT; t += Math.max(1, Math.floor(tempRange / 5))) {
+    const y = h - padding.bottom - ((t - minT) / tempRange) * plotH;
+    ctx.fillText(t.toFixed(0) + '°', padding.left - 8, y);
+    ctx.strokeStyle = '#eee';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(w - padding.right, y);
+    ctx.stroke();
+  }
+
+  // Linea soglia 55°C tratteggiata rossa
+  const thresholdY = h - padding.bottom - ((threshold - minT) / tempRange) * plotH;
+  ctx.strokeStyle = '#ff4444';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(padding.left, thresholdY);
+  ctx.lineTo(w - padding.right, thresholdY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Disegna linea temperatura
+  ctx.strokeStyle = '#ff9500';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  let firstPoint = true;
+  samples.forEach((sample, idx) => {
+    const x = padding.left + (idx / Math.max(1, samples.length - 1)) * plotW;
+    const y = h - padding.bottom - ((sample.tempC - minT) / tempRange) * plotH;
+    if (firstPoint) {
+      ctx.moveTo(x, y);
+      firstPoint = false;
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+  ctx.stroke();
+
+  // Piccoli cerchietti sui punti
+  ctx.fillStyle = '#ff9500';
+  samples.forEach((sample, idx) => {
+    const x = padding.left + (idx / Math.max(1, samples.length - 1)) * plotW;
+    const y = h - padding.bottom - ((sample.tempC - minT) / tempRange) * plotH;
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, 2 * Math.PI);
+    ctx.fill();
+  });
+
+  // X-axis labels (tempo, mostra ogni N-esimo campione)
+  ctx.fillStyle = '#999';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  const labelFreq = Math.max(1, Math.floor(samples.length / 6));
+  samples.forEach((sample, idx) => {
+    if (idx % labelFreq === 0 || idx === samples.length - 1) {
+      const d = new Date(sample.at);
+      const label = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+      const x = padding.left + (idx / Math.max(1, samples.length - 1)) * plotW;
+      ctx.fillText(label, x, h - padding.bottom + 15);
+    }
+  });
+}
+
+const LIGHT_CHANNELS = [
+  { key: 'Amber', color: '#ff9500' },
+  { key: 'Blue',  color: '#3b82f6' },
+  { key: 'White', color: '#9ca3af' },
+  { key: 'Power', color: '#10b981' }
+];
+
+function redrawLightChart() {
+  const noData = document.getElementById('light-no-data');
+  const drift = document.getElementById('light-drift');
+  const canvas = document.getElementById('lightChart');
+  if (!canvas) return;
+
+  const all = (tempChartData && tempChartData.samples) || [];
+  const samples = all.filter(s => s.color);
+
+  if (samples.length === 0) {
+    noData.style.display = 'flex';
+    drift.textContent = 'Scostamento: --';
+    drift.className = 'mt-4 text-xs text-gray-500';
+    const c = canvas.getContext('2d');
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+  noData.style.display = 'none';
+
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+
+  const w = canvas.width;
+  const h = canvas.height;
+  const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+  const plotW = w - padding.left - padding.right;
+  const plotH = h - padding.top - padding.bottom;
+
+  const yFor = v => h - padding.bottom - (Math.max(0, Math.min(100, v)) / 100) * plotH;
+  const xFor = idx => padding.left + (idx / Math.max(1, samples.length - 1)) * plotW;
+
+  // Assi
+  ctx.strokeStyle = '#ccc';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padding.left, padding.top);
+  ctx.lineTo(padding.left, h - padding.bottom);
+  ctx.lineTo(w - padding.right, h - padding.bottom);
+  ctx.stroke();
+
+  // Griglia e label Y (0-100%)
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#999';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  for (let v = 0; v <= 100; v += 25) {
+    const y = yFor(v);
+    ctx.fillText(v + '%', padding.left - 8, y);
+    ctx.strokeStyle = '#eee';
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(w - padding.right, y);
+    ctx.stroke();
+  }
+
+  // Serie: atteso tratteggiato sotto, reale pieno sopra
+  LIGHT_CHANNELS.forEach(ch => {
+    if (samples.some(s => s.expected)) {
+      ctx.strokeStyle = ch.color;
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      let started = false;
+      samples.forEach((s, idx) => {
+        if (!s.expected) { started = false; return; }
+        const x = xFor(idx), y = yFor(s.expected[ch.key] || 0);
+        if (!started) { ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.strokeStyle = ch.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    samples.forEach((s, idx) => {
+      const x = xFor(idx), y = yFor(s.color[ch.key] || 0);
+      if (idx === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
+    });
+    ctx.stroke();
+  });
+
+  // Label X (ora)
+  ctx.fillStyle = '#999';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  const labelFreq = Math.max(1, Math.floor(samples.length / 6));
+  samples.forEach((s, idx) => {
+    if (idx % labelFreq === 0 || idx === samples.length - 1) {
+      const d = new Date(s.at);
+      const label = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+      ctx.fillText(label, xFor(idx), h - padding.bottom + 15);
+    }
+  });
+
+  // Scostamento sull'ultimo campione con atteso (stessa soglia del watchdog: 12)
+  let last = null;
+  for (let i = samples.length - 1; i >= 0; i--) { if (samples[i].expected) { last = samples[i]; break; } }
+  if (!last) {
+    drift.textContent = 'Scostamento: nessuna schedule di riferimento (lastSchedule vuoto).';
+    drift.className = 'mt-4 text-xs text-gray-500';
+    return;
+  }
+  let dev = 0, worst = '';
+  LIGHT_CHANNELS.forEach(ch => {
+    const d = Math.abs((last.color[ch.key] || 0) - (last.expected[ch.key] || 0));
+    if (d > dev) { dev = d; worst = ch.key; }
+  });
+  const t = new Date(last.at);
+  const hhmm = t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0');
+  if (dev > 12) {
+    drift.textContent = 'Scostamento max ' + dev + ' su ' + worst + ' alle ' + hhmm + ' - fuori schedule, controlla i log.';
+    drift.className = 'mt-4 text-xs text-red-600 font-semibold';
+  } else {
+    drift.textContent = 'Scostamento max ' + dev + ' su ' + worst + ' alle ' + hhmm + ' - in linea con la schedule.';
+    drift.className = 'mt-4 text-xs text-gray-500';
+  }
+}
+
+loadLampInfo();
+loadTempHistory();
+
+// Poll della history ogni 60 secondi
+historyPollTimer = setInterval(loadTempHistory, 60000);
+
+// Cleanup al navigare via
+window.addEventListener('beforeunload', () => {
+  if (historyPollTimer) clearInterval(historyPollTimer);
+});
+</script>
+` }) %>

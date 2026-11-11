@@ -1,0 +1,43 @@
+<% locals.page = 'schedule' %>
+<%- include('layouts/base', { body: `
+<link rel="stylesheet" href="/css/schedule.css?v=${assetV}">
+<div class="sm-studio max-w-5xl mx-auto pb-40 lg:pb-28">
+  <header class="sm-heading">
+    <div><h1>La tua giornata di luce</h1><p>Dall’alba alla luna, ogni fascia ha il suo carattere.</p></div>
+    <span class="sm-cycle">Ciclo di 24 ore</span>
+  </header>
+
+  <!-- Timeline, preset e giornate salvate: componente dayrhythm (config in /js/schedule-page.js) -->
+  <section class="sm-editor" aria-labelledby="sm-timeline-title">
+    <div class="sm-editor-heading">
+      <div><h2 id="sm-timeline-title">Il ritmo della luce</h2><p>Ogni tipo è un colore fisso: vale uguale a qualunque ora. Trascina i bordi per regolare gli orari.</p></div>
+    </div>
+    <day-rhythm id="sm-timeline"></day-rhythm>
+    <p class="sm-editor-note">Anteprima indicativa dei colori. Tra uno slot e il successivo la luce sfuma; da notte/spento al giorno resta buio fino allo slot.</p>
+  </section>
+</div>
+
+<!-- Barra Applica sticky — sopra la bottom-nav mobile (bottom-16), accanto alla sidebar desktop (lg:left-60) -->
+<div class="sm-apply-bar fixed bottom-16 lg:bottom-0 left-0 lg:left-60 right-0 z-20 bg-white/90 dark:bg-ocean-900/90 backdrop-blur border-t border-gray-200 dark:border-ocean-700 px-4 py-3">
+  <div class="sm-apply-inner max-w-5xl mx-auto flex items-center gap-3">
+    <div class="sm-apply-feedback" aria-live="polite">
+    <span id="sm-dirty" class="text-xs text-amber-500 hidden">● modifiche non applicate</span>
+    <span id="sm-status" class="text-xs text-gray-400"></span>
+    <span id="sm-apply-status" class="text-xs text-gray-400"></span>
+    </div>
+    <button id="sm-apply" class="btn-primary ml-auto">Applica alla lampada</button>
+  </div>
+</div>
+
+<script>
+  window.__SM__ = {
+    profiles: ${JSON.stringify(profiles)},
+    depths:   ${JSON.stringify(sm.depths)},
+    fasce:    ${JSON.stringify(sm.fasce)},
+    models:   ${JSON.stringify(sm.models)},
+    presets:  ${JSON.stringify(sm.presets)}
+  };
+</script>
+<script src="/js/vendor/dayrhythm.min.js?v=${assetV}"></script>
+<script src="/js/schedule-page.js?v=${assetV}"></script>
+` }) %>

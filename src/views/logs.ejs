@@ -1,0 +1,27 @@
+<% locals.page = 'logs' %>
+<%- include('layouts/base', { body: `
+<div class="max-w-3xl mx-auto">
+  <div class="flex items-center justify-between mb-5">
+    <div class="flex items-center gap-2">
+      <a href="/settings" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">&larr;</a>
+      <h1 class="text-2xl font-bold">Log di sistema</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <label class="text-xs text-gray-500 flex items-center gap-1">
+        <input type="checkbox" id="log-auto" class="accent-blue-600"> auto
+      </label>
+      <a href="/api/logs/file" class="text-xs px-3 py-1.5 rounded-lg border border-gray-300 dark:border-ocean-600 text-gray-500 hover:bg-gray-50 dark:hover:bg-ocean-800">Scarica storico</a>
+      <button id="log-clear" class="text-xs px-3 py-1.5 rounded-lg border border-red-400 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">Svuota</button>
+    </div>
+  </div>
+
+  <div id="log-filters" class="flex flex-wrap gap-2 mb-3 text-xs"></div>
+
+  <div class="card !p-0 overflow-hidden">
+    <div id="log-list" class="divide-y divide-gray-100 dark:divide-ocean-700 max-h-[70vh] overflow-y-auto font-mono text-xs"></div>
+    <div id="log-empty" class="hidden p-6 text-center text-gray-400 text-sm">Nessun log.</div>
+  </div>
+  <p class="text-[11px] text-gray-400 mt-2">Buffer in memoria (ultimi 300, azzerato al riavvio del server). Gli errori di sincronizzazione meteo/luna e degli apply compaiono qui.</p>
+</div>
+<script src="/js/logs.js"></script>
+` }) %>

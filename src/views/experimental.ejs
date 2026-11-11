@@ -1,0 +1,12 @@
+<% locals.page = 'experimental' %>
+<%- include('layouts/base', { body: `
+<div class="max-w-2xl mx-auto pb-10">
+  <div class="flex items-center gap-2 mb-1">
+    <a href="/settings" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">&larr;</a>
+    <h1 class="text-2xl font-bold">Experimental</h1>
+  </div>
+  <p class="text-xs text-amber-500 mb-5">⚗️ Funzioni sperimentali. Un ciclo, una volta attivato, lavora da solo: dura settimane e progredisce ogni giorno. Il pallino sotto il nome (vicino ad Applica) imposta/riprende il giorno di trattamento.</p>
+  <div id="exp-cycles"></div>
+</div>
+<script src="/js/experimental.js?v=${assetV}"></script>
+` }) %>

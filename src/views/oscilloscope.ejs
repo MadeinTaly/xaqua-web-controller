@@ -1,0 +1,101 @@
+<% locals.page = 'oscilloscope' %>
+<%- include('layouts/base', { body: `
+<div class="max-w-4xl mx-auto">
+  <div class="flex items-center justify-between mb-5">
+    <div class="flex items-center gap-2">
+      <a href="/settings" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">&larr;</a>
+      <h1 class="text-2xl font-bold">Oscilloscopio</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <label class="text-xs text-gray-500 flex items-center gap-1">
+        <input type="checkbox" id="osc-running" class="accent-blue-600" checked> running
+      </label>
+      <input type="number" id="osc-tol" min="0" max="100" value="8" placeholder="tol" class="text-xs px-2 py-1 border rounded bg-gray-50 dark:bg-ocean-800 border-gray-200 dark:border-ocean-600 w-14" title="Tolerance">
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-5">
+    <div class="card !p-4">
+      <div class="text-xs text-gray-500 mb-1">Ora lampada</div>
+      <div id="osc-time" class="font-mono text-lg font-bold text-purple-500">--:--:--</div>
+    </div>
+    <div class="card !p-4">
+      <div class="text-xs text-gray-500 mb-1">Stato</div>
+      <div id="osc-badge" class="text-2xl font-bold flex items-center gap-2">
+        <span id="osc-ok-icon">⏺</span>
+        <span id="osc-ok-text">---</span>
+      </div>
+    </div>
+    <div class="card !p-4">
+      <div class="text-xs text-gray-500 mb-1">Deviazione max</div>
+      <div id="osc-dev" class="font-mono text-lg font-bold text-gray-700 dark:text-gray-200">--</div>
+    </div>
+    <div class="card !p-4">
+      <div class="text-xs text-gray-500 mb-1">Ultimi campioni</div>
+      <div id="osc-count" class="font-mono text-lg font-bold text-gray-700 dark:text-gray-200">0</div>
+    </div>
+  </div>
+
+  <div class="card !p-0 overflow-hidden">
+    <canvas id="osc-canvas" class="w-full" style="display: block; height: 300px; background: linear-gradient(180deg, rgba(15,23,42,0.5) 0%, rgba(15,23,42,0.3) 100%);"></canvas>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
+    <div class="card !p-4 text-center">
+      <div class="text-xs text-gray-500 mb-2">Amber</div>
+      <div class="flex justify-center gap-3">
+        <div>
+          <div class="text-xs text-gray-400 mb-1">reale</div>
+          <div id="osc-am-real" class="font-mono font-bold text-amber-600 dark:text-amber-400">--</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-400 mb-1">atteso</div>
+          <div id="osc-am-exp" class="font-mono font-bold text-amber-500/50 dark:text-amber-500/40">--</div>
+        </div>
+      </div>
+    </div>
+    <div class="card !p-4 text-center">
+      <div class="text-xs text-gray-500 mb-2">Blue</div>
+      <div class="flex justify-center gap-3">
+        <div>
+          <div class="text-xs text-gray-400 mb-1">reale</div>
+          <div id="osc-bl-real" class="font-mono font-bold text-blue-600 dark:text-blue-400">--</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-400 mb-1">atteso</div>
+          <div id="osc-bl-exp" class="font-mono font-bold text-blue-500/50 dark:text-blue-500/40">--</div>
+        </div>
+      </div>
+    </div>
+    <div class="card !p-4 text-center">
+      <div class="text-xs text-gray-500 mb-2">White</div>
+      <div class="flex justify-center gap-3">
+        <div>
+          <div class="text-xs text-gray-400 mb-1">reale</div>
+          <div id="osc-wh-real" class="font-mono font-bold text-gray-500">--</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-400 mb-1">atteso</div>
+          <div id="osc-wh-exp" class="font-mono font-bold text-gray-400/50">--</div>
+        </div>
+      </div>
+    </div>
+    <div class="card !p-4 text-center">
+      <div class="text-xs text-gray-500 mb-2">Power</div>
+      <div class="flex justify-center gap-3">
+        <div>
+          <div class="text-xs text-gray-400 mb-1">reale</div>
+          <div id="osc-pw-real" class="font-mono font-bold text-red-600 dark:text-red-400">--</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-400 mb-1">atteso</div>
+          <div id="osc-pw-exp" class="font-mono font-bold text-red-500/50 dark:text-red-500/40">--</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="text-[11px] text-gray-400 mt-4">Verifica in tempo reale che la lampada segua lo schedule inviato. Linee piene = valori reali, tratteggi = attesi. Verde: deviazione <= tolleranza (default 8).</p>
+</div>
+<script src="/js/oscilloscope.js?v=${assetV}"></script>
+` }) %>

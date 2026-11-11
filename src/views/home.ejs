@@ -1,0 +1,77 @@
+<% locals.page = 'home' %>
+<%- include('layouts/base', { body: `
+<link rel="stylesheet" href="/css/home.css?v=20260909">
+<div class="home-dashboard">
+  <header class="home-heading">
+    <div>
+      <h1>${i18n.home.title}</h1>
+      <p id="device-name">Connessione alla plafoniera…</p>
+    </div>
+    <button id="home-refresh" class="btn-secondary home-refresh" type="button">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4 4v5h5m11 11v-5h-5M4.5 9a8 8 0 0113-4M19.5 15a8 8 0 01-13 4"/></svg>
+      ${i18n.home.refresh}
+    </button>
+  </header>
+
+  <section class="light-instrument" aria-labelledby="light-title" aria-busy="true" id="light-instrument">
+    <div class="light-instrument-heading">
+      <h2 id="light-title">${i18n.home.currentColor}</h2>
+      <span id="home-live-status" class="home-status" data-state="loading" role="status">Connessione…</span>
+    </div>
+    <div class="light-field" aria-hidden="true">
+      <div class="light-fixture"><span></span><span></span><span></span></div>
+      <div class="light-beam light-beam-amber"></div>
+      <div class="light-beam light-beam-blue"></div>
+      <div class="light-beam light-beam-white"></div>
+      <div class="light-waterline"></div>
+      <span class="light-field-caption">Anteprima dei canali</span>
+    </div>
+    <div class="light-channels">
+      <div class="light-channel" style="--channel-color:#ffba62">
+        <span class="light-channel-name"><i></i>${i18n.home.amber}</span>
+        <div class="light-channel-reading"><span id="color-amber-preview">—</span><small>%</small></div>
+        <div class="light-channel-track"><span id="channel-amber-fill"></span></div>
+      </div>
+      <div class="light-channel" style="--channel-color:#70aaff">
+        <span class="light-channel-name"><i></i>${i18n.home.blue}</span>
+        <div class="light-channel-reading"><span id="color-blue-preview">—</span><small>%</small></div>
+        <div class="light-channel-track"><span id="channel-blue-fill"></span></div>
+      </div>
+      <div class="light-channel" style="--channel-color:#e9f5ff">
+        <span class="light-channel-name"><i></i>${i18n.home.white}</span>
+        <div class="light-channel-reading"><span id="color-white-preview">—</span><small>%</small></div>
+        <div class="light-channel-track"><span id="channel-white-fill"></span></div>
+      </div>
+      <div class="light-channel light-channel-power" style="--channel-color:#68dfd7">
+        <span class="light-channel-name"><i></i>${i18n.home.power}</span>
+        <div class="light-channel-reading"><span id="color-power-preview">—</span><small>%</small></div>
+        <div class="light-channel-track"><span id="channel-power-fill"></span></div>
+      </div>
+    </div>
+    <div class="light-instrument-footer"><p id="home-update-status">Lettura dei valori in corso</p><a href="/color">Regola la luce <span aria-hidden="true">↗</span></a></div>
+  </section>
+
+  <section class="home-telemetry" aria-label="Telemetria della plafoniera">
+    <div class="home-metric"><span>${i18n.home.temperature}</span><div><strong id="stat-temp">—</strong><small>°C</small></div><span class="home-metric-note">Temperatura della lampada</span></div>
+    <div class="home-metric"><span>${i18n.home.fanSpeed}</span><div><strong id="stat-fan">—</strong><small>RPM</small></div><span class="home-metric-note">Raffreddamento</span></div>
+    <div class="home-metric"><span>${i18n.home.lampTime}</span><div><strong id="stat-time">—</strong></div><a href="/lampinfo" class="home-metric-note">Dettagli della plafoniera ↗</a></div>
+  </section>
+
+  <div class="home-shortcuts">
+    <a href="/schedule" class="home-shortcut">
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M5 35h38M6 29c9 0 7-19 18-19s9 19 18 19" stroke="currentColor" stroke-width="2"/><path d="M15 39v3m18-3v3" stroke="currentColor" stroke-width="2"/></svg>
+      <div><h2>La tua giornata di luce</h2><p>Fasce orarie, colori e atmosfere.</p></div><span aria-hidden="true">↗</span>
+    </a>
+    <a href="/color" class="home-shortcut">
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M12 7v34M24 7v34M36 7v34" stroke="currentColor" stroke-width="1.5"/><path d="M8 17h8v7H8zm12 10h8v7h-8zm12-16h8v7h-8z" fill="currentColor"/></svg>
+      <div><h2>Controllo manuale</h2><p>Imposta ogni canale, in tempo reale.</p></div><span aria-hidden="true">↗</span>
+    </a>
+  </div>
+
+  <section id="wled-glance-wrap" class="home-wled hidden" aria-labelledby="home-wled-title">
+    <div class="home-section-heading"><h2 id="home-wled-title">Dispositivi WLED</h2><a href="/wled">Gestisci ↗</a></div>
+    <div id="wled-glance" class="home-wled-grid"></div>
+  </section>
+</div>
+<script src="/js/home.js?v=20260909" defer></script>
+` }) %>
